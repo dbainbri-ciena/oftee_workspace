@@ -27,7 +27,7 @@ all:
 env:
 	mkdir -p oftee/src/github.com/ciena aaa/src/github.com/ciena
 	git clone http://github.com/ciena/oftee oftee/src/github.com/ciena/oftee
-	git clone http://github.com/ciena/aaa oftee/src/github.com/ciena/aaa
+	git clone http://github.com/dbainbri-ciena/oftee-sdn-aaa-app aaa/src/github.com/ciena/aaa
 
 host.image:
 	docker build $(DOCKER_BUILD_ARGS) -t host:local -f example/docker/Dockerfile.host example/docker

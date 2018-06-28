@@ -9,6 +9,30 @@ managed switch.
 This project is a sample workspace that has been used to help develop, test,
 and experiment with `OFTEE`.
 
+## Quickstart
+
+### Start the VM
+```
+$ git clone http://github.com/dbainbri-ciena/oftee_workspace
+$ cd oftee_workspace
+$ vagrant up
+$ vagrant ssh
+```
+
+### On the VM
+```
+$ cd /vagrant
+$ make env
+$ make images
+$ make up
+```
+
+### Summary
+After these commands are completed the test environment is up and running. If
+the `make wpa` target is executed you will be able to see log messages in the
+logs of `oftee_oftee` and `oftee_aaa` that indicate some messages where
+processed
+
 ## Vagrant Machine
 This project contains a `Vagrantfile` that will instantiate a virtual
 machine (VM) that can be used as a test environment. While the specifics may

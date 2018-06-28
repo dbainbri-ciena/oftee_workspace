@@ -1,0 +1,3 @@
+#!/bin/bash
+
+docker inspect $(docker service ps $1 --format '{{.ID}}') --format '{{.Status.ContainerStatus.ContainerID}}'

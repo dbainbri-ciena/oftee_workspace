@@ -1,0 +1,3 @@
+FROM ubuntu:xenial
+
+RUN apt-get update -y && apt-get install -y net-tools iputils-ping dnsutils openssh-server wpasupplicant tcpdump

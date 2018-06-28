@@ -1,0 +1,67 @@
+version: '3'
+
+services:
+
+  radius:
+    image: marcelmaatkamp/freeradius:latest
+    deploy:
+      replicas: 1
+    volumes:
+      - "./data/clients.conf:/etc/raddb/clients.conf"
+      - "./data/users:/etc/raddb/users"
+    command:
+      - radiusd
+      - -tfxl
+      - stdout
+
+  onos:
+    image: onosproject/onos:1.13.1
+    deploy:
+      replicas: 1
+    ports:
+      - "6653:6653"
+      - "8101:8101"
+      - "8181:8181"
+    environment:
+      ONOS_APPS: "openflow,fwd"
+
+  aaa:
+    image: aaa:local
+    deploy:
+      replicas: 1
+    ports:
+      - "8005:8005"
+    environment:
+      LOG_LEVEL: "debug"
+      RADIUS_AT: "radius:1812"
+      LISTEN_ON: ":8005"
+      OFTEE_API: "http://oftee:8000"
+
+  oftee:
+    image: oftee:local
+    deploy:
+      replicas: 1
+    ports:
+      - "6654:6654"
+      - "8000:8000"
+    environment:
+      LISTEN_ON: ":6654"
+      API_ON: ":8000"
+      PROXY_TO: "onos:6653"
+      LOG_LEVEL: "debug"
+      SHARE_CONNECTIONS: "true"
+      TEE_TO: "dl_type=0x888e;action=http://aaa:8005/aaa/eap"
+      TEE_RAW: "false"
+
+  host:
+    image: host:local
+    deploy:
+      replicas: 1
+    entrypoint:
+      - sleep
+      - 365d
+    volumes:
+      - "./data/wpa_supplicant.conf:/etc/wpa_supplicant/wpa_supplicant.conf"
+      - "./data/cacert.pem:/etc/cert/cacert.pem"
+      - "./data/client.pem:/etc/cert/client.pem"
+      - "./data/client.key:/etc/cert/client.key"

@@ -18,6 +18,8 @@ all:
 	@echo "up             bring up everything"
 	@echo "down           tear down everything"
 	@echo "host.shell     start a shell in the host container"
+	@echo "radius.shell   start a shell in the radius container"
+	@echo "aaa.shell      start a shell in the aaa container"
 	@echo "wpa            start a wpa_supplicant in the host container"
 	@echo "oftee.logs     tail -f the oftee logs"
 	@echo "aaa.logs       tail -f the aaa SDN app logs"
@@ -39,7 +41,7 @@ aaa.image:
 	docker build $(DOCKER_BUILD_ARGS) -t aaa:local -f aaa/src/github.com/ciena/aaa/Dockerfile aaa/src/github.com/ciena/aaa
 
 pull.images:
-	docker pull marcelmaatkamp/freeradius:latest
+	docker pull freeradius/freeradius-server:latest
 	docker pull onosproject/onos:1.13.1
 
 images: host.image oftee.image aaa.image pull.images
@@ -77,20 +79,30 @@ up: bridge deploy add-iface flow-wait
 down: undeploy del-bridge
 
 wpa:
-	docker exec -ti $(shell ./utils/cid oftee_host) wpa_supplicant -i eth2 -D wired -c /etc/wpa_supplicant/wpa_supplicant.conf
+	docker exec -ti $(shell ./utils/cid oftee_host) wpa_supplicant -i eth2 -D wired -c /etc/wpa_supplicant/wpa_supplicant.conf -ddd
 
 host.shell:
 	docker exec -ti $(shell ./utils/cid oftee_host) bash
 
+radius.shell:
+		docker exec -ti $(shell ./utils/cid oftee_radius) bash
+
+aaa.shell:
+			docker exec -ti $(shell ./utils/cid oftee_aaa) bash
+
 oftee.logs:
-	docker service logs -f oftee_oftee
+	docker service logs --raw -f oftee_oftee
 
 aaa.logs:
-	docker service logs -f oftee_aaa
+	docker service logs --raw -f oftee_aaa
 
 radius.logs:
-	docker service logs -f oftee_radius
+	docker service logs --raw -f oftee_radius
 
 onos.logs:
 	docker service logs -f oftee_onos
 
+clean:
+	docker service rm oftee_aaa oftee_radius oftee_oftee || true
+
+try: clean aaa.image deploy

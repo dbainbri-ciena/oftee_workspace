@@ -3,15 +3,14 @@ version: '3'
 services:
 
   radius:
-    image: marcelmaatkamp/freeradius:latest
+    image: freeradius/freeradius-server:latest
     deploy:
       replicas: 1
     volumes:
-      - "./data/clients.conf:/etc/raddb/clients.conf"
-      - "./data/users:/etc/raddb/users"
+      - "./data/freeradius/:/etc/freeradius"
     command:
-      - radiusd
-      - -tfxl
+      - freeradius
+      - -tfxxxxxl
       - stdout
 
   onos:
@@ -23,7 +22,7 @@ services:
       - "8101:8101"
       - "8181:8181"
     environment:
-      ONOS_APPS: "openflow,fwd"
+      ONOS_APPS: "openflow,fwd,aaa"
 
   aaa:
     image: aaa:local
@@ -32,10 +31,12 @@ services:
     ports:
       - "8005:8005"
     environment:
-      LOG_LEVEL: "debug"
+      LOG_LEVEL: "error"
       RADIUS_AT: "radius:1812"
       LISTEN_ON: ":8005"
       OFTEE_API: "http://oftee:8000"
+      SHARED_SECRET: "SECRET"
+      RADIUS_TIMEOUT: "10s"
 
   oftee:
     image: oftee:local
@@ -62,6 +63,3 @@ services:
       - 365d
     volumes:
       - "./data/wpa_supplicant.conf:/etc/wpa_supplicant/wpa_supplicant.conf"
-      - "./data/cacert.pem:/etc/cert/cacert.pem"
-      - "./data/client.pem:/etc/cert/client.pem"
-      - "./data/client.key:/etc/cert/client.key"

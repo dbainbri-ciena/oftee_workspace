@@ -1,6 +1,15 @@
 version: '3'
 
 services:
+  
+  dhcpd:
+    image: networkboot/dhcpd:latest
+    deploy:
+      replicas: 1
+    volumes:
+      - "./data/dhcpd:/data"
+    environment:
+      IFACE: eth0
 
   radius:
     image: freeradius/freeradius-server:latest
@@ -38,6 +47,13 @@ services:
       SHARED_SECRET: "SECRET"
       RADIUS_TIMEOUT: "10s"
 
+  relay:
+    image: dhcp-relay:local
+    deploy:
+      replicas: 1
+    ports:
+      - "5000:5000"
+
   oftee:
     image: oftee:local
     deploy:
@@ -51,7 +67,7 @@ services:
       PROXY_TO: "onos:6653"
       LOG_LEVEL: "debug"
       SHARE_CONNECTIONS: "true"
-      TEE_TO: "dl_type=0x888e;action=http://aaa:8005/aaa/eap"
+      TEE_TO: "dl_type=0x888e;action=http://aaa:8005/aaa/eap,dl_type=0x0800;action=http://relay:5000/packet"
       TEE_RAW: "false"
 
   host:

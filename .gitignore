@@ -1,4 +1,6 @@
 .vagrant
 aaa
 oftee
+dhcp-relay
+dhcpd.leases
 *.log

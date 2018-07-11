@@ -1,0 +1,23 @@
+{
+    "tableId": 0,
+    "appId": "org.ciena.oftee",
+    "priority": 40000,
+    "isPermanent": true,
+    "treatment": {
+        "instructions": [
+            {
+                "type": "OUTPUT",
+                "port": "CONTROLLER"
+            }
+        ]
+    },
+    "selector": {
+        "criteria": [
+            {
+                "type": "ETH_TYPE",
+                "ethType": "0x0800"
+            }
+        ]
+    }
+}
+

@@ -7,4 +7,5 @@ RUN apt-get update -y && apt-get install -y \
 	openssh-server \
 	wpasupplicant \
 	tcpdump \
-	vim
+	vim \
+        isc-dhcp-client

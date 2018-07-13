@@ -16,6 +16,14 @@
             {
                 "type": "ETH_TYPE",
                 "ethType": "0x0800"
+            },
+            {
+                "type": "IP_PROTO",
+                "protocol": 17
+            },
+            {
+                "type": "UDP_DST",
+                "udpPort": 67
             }
         ]
     }

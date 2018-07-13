@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flow xmlns="urn:opendaylight:flow:inventory">
+    <strict>false</strict>
+    <flow-name>dhcp</flow-name>
+    <id>264</id>
+    <cookie_mask>255</cookie_mask>
+    <cookie>109</cookie>
+    <table_id>0</table_id>
+    <priority>2</priority>
+    <installHw>false</installHw>
+    <barrier>false</barrier>
+    <instructions>
+        <instruction>
+            <order>0</order>
+            <apply-actions>
+                <action>
+                    <order>0</order>
+                    <output-action>
+                        <output-node-connector>CONTROLLER</output-node-connector>
+                        <max-length>1024</max-length>
+                    </output-action>
+                </action>
+            </apply-actions>
+        </instruction>
+    </instructions>
+    <match>
+        <ethernet-match>
+            <ethernet-type>
+                <type>0x0800</type>
+            </ethernet-type>
+        </ethernet-match>
+        <ip-match>
+            <ip-protocol>17</ip-protocol>
+        </ip-match>
+        <udp-destination-port>67</udp-destination-port>
+    </match>
+</flow>

@@ -9,7 +9,7 @@ managed switch.
 This project is a sample workspace that has been used to help develop, test,
 and experiment with `OFTEE`.
 
-## Quickstart
+## Quick Start
 
 ### Start the VM
 ```
@@ -26,6 +26,20 @@ $ make env
 $ make images
 $ make up
 ```
+
+### Controller Support
+This example contains support for both the Open Networking Operating System
+(`ONOS`) and the OpenDaylight (`ODL`) controllers. To select which controller
+is used an environment variable, `CONTROLLER` is used. If this variable is not
+set the `ONOS` controller is used by default.
+
+To use the `ODL` controller, for example, the same commands are run as above
+with the exception in the `make up` command. That last command should instead
+be:
+```
+$ CONTROLLER=odl make up
+```
+_All other command, including the test commands described later, are identical._
 
 ### Summary
 After these commands are completed the test environment is up and running. The
@@ -118,6 +132,20 @@ DHCPACK of 10.0.0.100 from 10.0.0.12
 RTNETLINK answers: Operation not permitted
 mv: cannot move '/etc/resolv.conf.dhclient-new.44' to '/etc/resolv.conf': Device or resource busy
 bound to 10.0.0.100 -- renewal in 269 seconds.
+```
+
+## Quick Stop
+
+To stop the containers used for the demonstration the following command can be
+used:
+```
+$ make down
+```
+
+If you want do destroy the `Vagrant MV`, first exist the VM login shell then
+issue a `destroy` to `Vagrant`:
+```
+$ vagrant destroy -f
 ```
 
 ## Vagrant Machine

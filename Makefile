@@ -1,5 +1,14 @@
 DOCKER_BUILD_ARGS=$(NO_CACHE) --quiet --force-rm --rm
 
+# Make sure a valid controller type is specified, or pick a default
+ifneq ($(CONTROLLER),odl)
+ifneq ($(CONTROLLER),onos)
+ifneq ($(CONTROLLER),)
+$(error "Unknown controller type specified, '$(CONTROLLER)'. Only onos and odl supported")
+endif
+CONTROLLER=onos
+endif
+endif
 
 .PHONY: all
 all:
@@ -26,6 +35,7 @@ all:
 	@echo "oftee.image    build the Docker image for the oftee"
 	@echo "oftee.logs     tail -f the oftee logs"
 	@echo "onos.logs      tail -f the onos logs"
+	@echo "odl.logs       tail -f the odl logs"
 	@echo "pull.images    pull all standard images from dockhub.com"
 	@echo "radius.logs    tail -f the radius logs"
 	@echo "radius.shell   start a shell in the radius container"
@@ -62,8 +72,9 @@ relay.image:
 .PHONY: pull.images
 pull.images:
 	docker pull freeradius/freeradius-server:latest
-	docker pull onosproject/onos:1.13.1
 	docker pull networkboot/dhcpd:latest
+	docker pull onosproject/onos:1.13.1
+	docker pull glefevre/opendaylight:latest
 
 .PHONY: images
 images: host.image oftee.image aaa.image relay.image pull.images
@@ -83,32 +94,39 @@ add-iface:
 
 .PHONY: deploy
 deploy:
-	docker stack deploy -c example/oftee-stack.yml oftee
+ifeq ($(CONTROLLER),onos)
+	CONTROLLER_IMAGE=onosproject/onos:1.13.1 docker stack deploy -c example/oftee-stack.yml oftee
+else
+	CONTROLLER_IMAGE=glefevre/opendaylight:latest docker stack deploy -c example/oftee-stack.yml oftee
+	@echo "Installing ODL features required for L2 switch support ..."
+	@./utils/wait-for-success.sh "Waiting for ODL to accept feature:install requests ..." sshpass -p karaf ssh -p 8101 karaf@localhost feature:install odl-l2switch-switch-rest
+endif
 
 .PHONY: flows
 flows:
-	curl -sSL -H 'Content-type: application/json' http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}')  -d@example/aaa_in.json
-	curl -sSL -H 'Content-type: application/json' http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}')  -d@example/dhcp_in.json
+ifeq ($(CONTROLLER),onos)
+	curl -sSL -H 'Content-type: application/json' http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}')  -d@example/onos_aaa_in.json
+	curl -sSL -H 'Content-type: application/json' http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}')  -d@example/onos_dhcp_in.json
+else
+	curl --fail -sSL -XPUT -H 'Content-type: application/xml' http://admin:admin@localhost:8080/restconf/config/opendaylight-inventory:nodes/node/openflow:$(shell printf "%d" 0x$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}'))/table/0/flow/263 -d@example/odl_aaa_in.xml
+	curl --fail -sSL -XPUT -H 'Content-type: application/xml' http://admin:admin@localhost:8080/restconf/config/opendaylight-inventory:nodes/node/openflow:$(shell printf "%d" 0x$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}'))/table/0/flow/264 -d@example/odl_dhcp_in.xml
+endif
 
 .PHONY: flow-aaa-wait
 flow-aaa-wait:
-	@bash -c \
-		curl --fail -sSL -H 'Content-type: application/json' http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 2>/dev/null | grep dpid | awk -F: '{print $$NF}')  -d@example/aaa_in.json 2>/dev/null 1>/dev/null; \
-		while [ $$? -ne 0 ]; do \
-		  echo "waiting for ONOS to accept flow requests ..."; \
-		  sleep 3; \
-		  curl --fail -sSL -H 'Content-type: application/json' http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 2>/dev/null | grep dpid | awk -F: '{print $$NF}')  -d@example/aaa_in.json 2>/dev/null 1>/dev/null; \
-		done;
+ifeq ($(CONTROLLER),onos)
+	@./utils/wait-for-success.sh "waiting for ONOS to accept flow requests ..." curl --fail -sSL -H Content-type:application/json http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 2>/dev/null | grep dpid | awk -F: '{print $$NF}')  -d@example/onos_aaa_in.json
+else
+	@./utils/wait-for-success.sh "waiting for ODL to accept flow requests ..." curl --fail -sSL -XPUT -H Content-type:application/xml http://admin:admin@localhost:8080/restconf/config/opendaylight-inventory:nodes/node/openflow:$(shell printf "%d" 0x$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}'))/table/0/flow/263 -d@example/odl_aaa_in.xml
+endif
 
 .PHONY: flow-dhcp-wait
 flow-dhcp-wait:
-	@bash -c \
-                curl --fail -sSL -H 'Content-type: application/json' http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 2>/dev/null | grep dpid | awk -F: '{print $$NF}')  -d@example/dhcp_in.json 2>/dev/null 1>/dev/null; \
-                while [ $$? -ne 0 ]; do \
-                  echo "waiting for ONOS to accept flow requests ..."; \
-                  sleep 3; \
-                  curl --fail -sSL -H 'Content-type: application/json' http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 2>/dev/null | grep dpid | awk -F: '{print $$NF}')  -d@example/dhcp_in.json 2>/dev/null 1>/dev/null; \
-                done;
+ifeq ($(CONTROLLER),onos)
+	@./utils/wait-for-success.sh "waiting for ONOS to accept flow requests ..." curl --fail -sSL -H Content-type:application/json http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 2>/dev/null | grep dpid | awk -F: '{print $$NF}')  -d@example/onos_dhcp_in.json
+else
+	@./utils/wait-for-success.sh "waiting for ODL to accept flow requests ..." curl --fail -sSL -XPUT -H Content-type:application/xml http://admin:admin@localhost:8080/restconf/config/opendaylight-inventory:nodes/node/openflow:$(shell printf "%d" 0x$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}'))/table/0/flow/264 -d@example/odl_dhcp_in.xml
+endif
 
 .PHONY: flow-wait
 flow-wait: flow-aaa-wait flow-dhcp-wait
@@ -166,6 +184,10 @@ radius.logs:
 .PHONY: onos.logs
 onos.logs:
 	docker service logs -f oftee_onos
+
+.PHONY: odl.logs
+odl.logs:
+	docker service logs -f oftee_odl
 
 .PHONY: relay.logs
 relay.logs:

@@ -22,14 +22,15 @@ services:
       - -tfxxxxxl
       - stdout
 
-  onos:
-    image: onosproject/onos:1.13.1
+  controller:
+    image: ${CONTROLLER_IMAGE:-onosproject/onos:1.13.1}
     deploy:
       replicas: 1
     ports:
       - "6653:6653"
       - "8101:8101"
       - "8181:8181"
+      - "8080:8080"
     environment:
       ONOS_APPS: "openflow,fwd,aaa"
 
@@ -64,7 +65,7 @@ services:
     environment:
       LISTEN_ON: ":6654"
       API_ON: ":8000"
-      PROXY_TO: "onos:6653"
+      PROXY_TO: "controller:6653"
       LOG_LEVEL: "debug"
       SHARE_CONNECTIONS: "true"
       TEE_TO: "dl_type=0x888e;action=http://aaa:8005/aaa/eap,dl_type=0x0800;action=http://relay:5000/packet"

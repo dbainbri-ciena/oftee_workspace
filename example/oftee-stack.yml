@@ -1,11 +1,13 @@
-version: '3'
+version: '3.7'
 
 services:
   
   dhcpd:
     image: networkboot/dhcpd:latest
     deploy:
+      mode: replicated
       replicas: 1
+      endpoint_mode: dnsrr
     volumes:
       - "./data/dhcpd:/data"
     environment:

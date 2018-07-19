@@ -1,6 +1,7 @@
 DOCKER_BUILD_ARGS=$(NO_CACHE) --quiet --force-rm --rm
 
 # Make sure a valid controller type is specified, or pick a default
+ifneq ($(CONTROLLER),odl-oxygen)
 ifneq ($(CONTROLLER),odl)
 ifneq ($(CONTROLLER),onos)
 ifneq ($(CONTROLLER),)
@@ -8,6 +9,19 @@ $(error "Unknown controller type specified, '$(CONTROLLER)'. Only onos and odl s
 endif
 CONTROLLER=onos
 endif
+endif
+endif
+
+ifeq ($(CONTROLLER),onos)
+CONTROLLER_IMAGE=onosproject/onos:1.13.1
+endif
+ifeq ($(CONTROLLER),odl)
+ODL_FEATURES=odl-l2switch-switch-rest odl-dlux-core
+CONTROLLER_IMAGE=glefevre/opendaylight:latest
+endif
+ifeq ($(CONTROLLER),odl-oxygen)
+ODL_FEATURES=features-l2switch
+CONTROLLER_IMAGE=opendaylight:oxygen
 endif
 
 .PHONY: all
@@ -57,6 +71,10 @@ env:
 host.image:
 	docker build $(DOCKER_BUILD_ARGS) -t host:local -f example/docker/Dockerfile.host example/docker
 
+.PHONY: odl.image
+odl.image:
+	docker build $(DOCKER_BUILD_ARGS) -t opendaylight:oxygen -f example/docker/Dockerfile.odl example/docker
+
 .PHONY: oftee.image
 oftee.image:
 	docker build $(DOCKER_BUILD_ARGS) -t oftee:local -f oftee/src/github.com/ciena/oftee/Dockerfile oftee/src/github.com/ciena/oftee
@@ -77,7 +95,7 @@ pull.images:
 	docker pull glefevre/opendaylight:latest
 
 .PHONY: images
-images: host.image oftee.image aaa.image relay.image pull.images
+images: host.image odl.image oftee.image aaa.image relay.image pull.images
 
 .PHONY: bridge
 bridge:
@@ -94,12 +112,10 @@ add-iface:
 
 .PHONY: deploy
 deploy:
-ifeq ($(CONTROLLER),onos)
-	CONTROLLER_IMAGE=onosproject/onos:1.13.1 docker stack deploy -c example/oftee-stack.yml oftee
-else
-	CONTROLLER_IMAGE=glefevre/opendaylight:latest docker stack deploy -c example/oftee-stack.yml oftee
+	CONTROLLER_IMAGE=$(CONTROLLER_IMAGE) docker stack deploy -c example/oftee-stack.yml oftee
+ifneq ($(CONTROLLER),onos)
 	@echo "Installing ODL features required for L2 switch support ..."
-	@./utils/wait-for-success.sh "Waiting for ODL to accept feature:install requests ..." sshpass -p karaf ssh -p 8101 karaf@localhost feature:install odl-l2switch-switch-rest
+	@./utils/wait-for-success.sh "Waiting for ODL to accept feature:install requests ..." sshpass -p karaf ssh -p 8101 karaf@localhost feature:install $(ODL_FEATURES)
 endif
 
 .PHONY: flows
@@ -108,8 +124,8 @@ ifeq ($(CONTROLLER),onos)
 	curl -sSL -H 'Content-type: application/json' http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}')  -d@example/onos_aaa_in.json
 	curl -sSL -H 'Content-type: application/json' http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}')  -d@example/onos_dhcp_in.json
 else
-	curl --fail -sSL -XPUT -H 'Content-type: application/xml' http://admin:admin@localhost:8080/restconf/config/opendaylight-inventory:nodes/node/openflow:$(shell printf "%d" 0x$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}'))/table/0/flow/263 -d@example/odl_aaa_in.xml
-	curl --fail -sSL -XPUT -H 'Content-type: application/xml' http://admin:admin@localhost:8080/restconf/config/opendaylight-inventory:nodes/node/openflow:$(shell printf "%d" 0x$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}'))/table/0/flow/264 -d@example/odl_dhcp_in.xml
+	curl --fail -sSL -XPUT -H 'Content-type: application/xml' http://admin:admin@localhost:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:$(shell printf "%d" 0x$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}'))/table/0/flow/263 -d@example/odl_aaa_in.xml
+	curl --fail -sSL -XPUT -H 'Content-type: application/xml' http://admin:admin@localhost:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:$(shell printf "%d" 0x$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}'))/table/0/flow/264 -d@example/odl_dhcp_in.xml
 endif
 
 .PHONY: flow-aaa-wait
@@ -117,7 +133,7 @@ flow-aaa-wait:
 ifeq ($(CONTROLLER),onos)
 	@./utils/wait-for-success.sh "waiting for ONOS to accept flow requests ..." curl --fail -sSL -H Content-type:application/json http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 2>/dev/null | grep dpid | awk -F: '{print $$NF}')  -d@example/onos_aaa_in.json
 else
-	@./utils/wait-for-success.sh "waiting for ODL to accept flow requests ..." curl --fail -sSL -XPUT -H Content-type:application/xml http://admin:admin@localhost:8080/restconf/config/opendaylight-inventory:nodes/node/openflow:$(shell printf "%d" 0x$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}'))/table/0/flow/263 -d@example/odl_aaa_in.xml
+	@./utils/wait-for-success.sh "waiting for ODL to accept flow requests ..." curl --fail -sSL -XPUT -H Content-type:application/xml http://admin:admin@localhost:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:$(shell printf "%d" 0x$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}'))/table/0/flow/263 -d@example/odl_aaa_in.xml
 endif
 
 .PHONY: flow-dhcp-wait
@@ -125,7 +141,7 @@ flow-dhcp-wait:
 ifeq ($(CONTROLLER),onos)
 	@./utils/wait-for-success.sh "waiting for ONOS to accept flow requests ..." curl --fail -sSL -H Content-type:application/json http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 2>/dev/null | grep dpid | awk -F: '{print $$NF}')  -d@example/onos_dhcp_in.json
 else
-	@./utils/wait-for-success.sh "waiting for ODL to accept flow requests ..." curl --fail -sSL -XPUT -H Content-type:application/xml http://admin:admin@localhost:8080/restconf/config/opendaylight-inventory:nodes/node/openflow:$(shell printf "%d" 0x$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}'))/table/0/flow/264 -d@example/odl_dhcp_in.xml
+	@./utils/wait-for-success.sh "waiting for ODL to accept flow requests ..." curl --fail -sSL -XPUT -H Content-type:application/xml http://admin:admin@localhost:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:$(shell printf "%d" 0x$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}'))/table/0/flow/264 -d@example/odl_dhcp_in.xml
 endif
 
 .PHONY: flow-wait

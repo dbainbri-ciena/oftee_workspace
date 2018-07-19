@@ -1,0 +1,12 @@
+FROM openjdk:8 as download
+
+RUN apt-get update -y && \
+	apt-get install -y wget
+
+RUN wget https://nexus.opendaylight.org/content/repositories/public/org/opendaylight/integration/karaf/0.8.2/karaf-0.8.2.tar.gz
+RUN tar -zxf karaf-0.8.2.tar.gz
+
+FROM openjdk:8
+COPY --from=download /karaf-0.8.2 /odl
+WORKDIR /odl
+CMD /odl/bin/karaf run

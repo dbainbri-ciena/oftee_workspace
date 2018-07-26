@@ -40,10 +40,8 @@ services:
     image: aaa:local
     deploy:
       replicas: 1
-    ports:
-      - "8005:8005"
     environment:
-      LOG_LEVEL: "error"
+      LOG_LEVEL: "debug"
       RADIUS_AT: "radius:1812"
       LISTEN_ON: ":8005"
       OFTEE_API: "http://oftee:8000"

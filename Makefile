@@ -199,16 +199,16 @@ radius.logs:
 
 .PHONY: onos.logs
 onos.logs:
-	docker service logs -f oftee_onos
+	docker service logs --raw -f oftee_onos
 
 .PHONY: odl.logs
 odl.logs:
-	docker service logs -f oftee_odl
+	docker service logs --raw -f oftee_odl
 
 .PHONY: relay.logs
 relay.logs:
-	docker service logs -f oftee_relay
+	docker service logs --raw -f oftee_relay
 
 .PHONY: dhcp.logs
 dhcp.logs:
-	docker service logs -f oftee_dhcpd
+	docker service logs --raw -f oftee_dhcpd

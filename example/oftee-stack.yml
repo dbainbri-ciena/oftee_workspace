@@ -34,7 +34,7 @@ services:
       - "8181:8181"
       - "8080:8080"
     environment:
-      ONOS_APPS: "openflow,fwd,aaa"
+      ONOS_APPS: "openflow,fwd"
 
   aaa:
     image: aaa:local

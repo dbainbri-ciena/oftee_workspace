@@ -168,38 +168,39 @@ invoke useful commands for developing and testing. Simply running `make` will
 display the possible targets (as listed below):
 ```
 $ make
-TARGET         DESCRIPTION
-aaa.image      build the Docker image for the aaa SDN app
-aaa.logs       tail -f the aaa SDN app logs
-aaa.shell      start a shell in the aaa container
-add-iface      add an interface to the ovs bridge for the host container
-bridge         create the ovs bridge
-del-bridge     delete the ovs bridge
-deploy         start the Docker Swarm stack (all the containers)
-dhcp           start a dhcp request in the host container
-dhcp.logs      tail -f the DHCP server logs
-dhcp.shell    start a shell in the DHCP server container
-down           tear down everything
-env            clone the source to oftee and aaa into workspace
-flow-aaa-wait  push the EAP packet in flow repeated until success
-flow-dhcp-wait push the DHCP packet in flow repeated until success
-flow-wait      same as flows, but waits for success
-flows          push the EAP and DHCP flows to packet in to the controller
-host.image     build the Docker image for example client host
-host.shell     start a shell in the host container
-images         build or pull all required Docker imagges
-oftee.image    build the Docker image for the oftee
-oftee.logs     tail -f the oftee logs
-onos.logs      tail -f the onos logs
-pull.images    pull all standard images from dockhub.com
-radius.logs    tail -f the radius logs
-radius.shell   start a shell in the radius container
-relay.image    build the Docker image for the DHCP L3 proxy app
-relay.logs     tail -f the DHCP relay logs
-relay.shell    start a shell in the DHCP relay container
-undeploy       delete the Docker Swarm stack (all the containers)
-up             bring up everything
-wpa            start a wpa_supplicant in the host container
+TARGET            DESCRIPTION
+aaa.image         build the Docker image for the aaa SDN app
+aaa.logs          tail -f the aaa SDN app logs
+aaa.shell         start a shell in the aaa container
+add-iface         add an interface to the ovs bridge for the host container
+controller.logs   tail -f the onos or odl logs
+bridge            create the ovs bridge
+del-bridge        delete the ovs bridge
+deploy            start the Docker Swarm stack (all the containers)
+dhcp              start a dhcp request in the host container
+dhcp.logs         tail -f the DHCP server logs
+dhcp.shell        start a shell in the DHCP server container
+down              tear down everything
+env               clone the source to oftee and aaa into workspace
+flow-aaa-wait     push the EAP packet in flow repeated until success
+flow-dhcp-wait    push the DHCP packet in flow repeated until success
+flow-wait         same as flows, but waits for success
+flows             push the EAP and DHCP flows to packet in to the controller
+host.image        build the Docker image for example client host
+host.shell        start a shell in the host container
+images            build or pull all required Docker imagges
+oftee.image       build the Docker image for the oftee
+oftee.logs        tail -f the oftee logs
+odl.logs          tail -f the odl logs
+pull.images       pull all standard images from dockhub.com
+radius.logs       tail -f the radius logs
+radius.shell      start a shell in the radius container
+relay.image       build the Docker image for the DHCP L3 proxy app
+relay.logs        tail -f the DHCP relay logs
+relay.shell       start a shell in the DHCP relay container
+undeploy          delete the Docker Swarm stack (all the containers)
+up                bring up everything
+wpa               start a wpa_supplicant in the host container
 ```
 
 ### Makefile Target Highlights

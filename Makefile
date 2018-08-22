@@ -26,39 +26,39 @@ endif
 
 .PHONY: all
 all:
-	@echo "TARGET         DESCRIPTION"
-	@echo "aaa.image      build the Docker image for the aaa SDN app"
-	@echo "aaa.logs       tail -f the aaa SDN app logs"
-	@echo "aaa.shell      start a shell in the aaa container"
-	@echo "add-iface      add an interface to the ovs bridge for the host container"
-	@echo "bridge         create the ovs bridge"
-	@echo "del-bridge     delete the ovs bridge"
-	@echo "deploy         start the Docker Swarm stack (all the containers)"
-	@echo "dhcp           start a dhcp request in the host container"
-	@echo "dhcp.logs      tail -f the DHCP server logs"
-	@echo "dhcp.shell    start a shell in the DHCP server container"
-	@echo "down           tear down everything"
-	@echo "env            clone the source to oftee and aaa into workspace"
-	@echo "flow-aaa-wait  push the EAP packet in flow repeated until success"
-	@echo "flow-dhcp-wait push the DHCP packet in flow repeated until success"
-	@echo "flow-wait      same as flows, but waits for success"
-	@echo "flows          push the EAP and DHCP flows to packet in to the controller"
-	@echo "host.image     build the Docker image for example client host"
-	@echo "host.shell     start a shell in the host container"
-	@echo "images         build or pull all required Docker imagges"
-	@echo "oftee.image    build the Docker image for the oftee"
-	@echo "oftee.logs     tail -f the oftee logs"
-	@echo "onos.logs      tail -f the onos logs"
-	@echo "odl.logs       tail -f the odl logs"
-	@echo "pull.images    pull all standard images from dockhub.com"
-	@echo "radius.logs    tail -f the radius logs"
-	@echo "radius.shell   start a shell in the radius container"
-	@echo "relay.image    build the Docker image for the DHCP L3 proxy app"
-	@echo "relay.logs     tail -f the DHCP relay logs"
-	@echo "relay.shell    start a shell in the DHCP relay container"
-	@echo "undeploy       delete the Docker Swarm stack (all the containers)"
-	@echo "up             bring up everything"
-	@echo "wpa            start a wpa_supplicant in the host container"
+	@echo "TARGET            DESCRIPTION"
+	@echo "aaa.image         build the Docker image for the aaa SDN app"
+	@echo "aaa.logs          tail -f the aaa SDN app logs"
+	@echo "aaa.shell         start a shell in the aaa container"
+	@echo "add-iface         add an interface to the ovs bridge for the host container"
+	@echo "controller.logs   tail -f the onos or odl logs"
+	@echo "bridge            create the ovs bridge"
+	@echo "del-bridge        delete the ovs bridge"
+	@echo "deploy            start the Docker Swarm stack (all the containers)"
+	@echo "dhcp              start a dhcp request in the host container"
+	@echo "dhcp.logs         tail -f the DHCP server logs"
+	@echo "dhcp.shell        start a shell in the DHCP server container"
+	@echo "down              tear down everything"
+	@echo "env               clone the source to oftee and aaa into workspace"
+	@echo "flow-aaa-wait     push the EAP packet in flow repeated until success"
+	@echo "flow-dhcp-wait    push the DHCP packet in flow repeated until success"
+	@echo "flow-wait         same as flows, but waits for success"
+	@echo "flows             push the EAP and DHCP flows to packet in to the controller"
+	@echo "host.image        build the Docker image for example client host"
+	@echo "host.shell        start a shell in the host container"
+	@echo "images            build or pull all required Docker imagges"
+	@echo "oftee.image       build the Docker image for the oftee"
+	@echo "oftee.logs        tail -f the oftee logs"
+	@echo "odl.logs          tail -f the odl logs"
+	@echo "pull.images       pull all standard images from dockhub.com"
+	@echo "radius.logs       tail -f the radius logs"
+	@echo "radius.shell      start a shell in the radius container"
+	@echo "relay.image       build the Docker image for the DHCP L3 proxy app"
+	@echo "relay.logs        tail -f the DHCP relay logs"
+	@echo "relay.shell       start a shell in the DHCP relay container"
+	@echo "undeploy          delete the Docker Swarm stack (all the containers)"
+	@echo "up                bring up everything"
+	@echo "wpa               start a wpa_supplicant in the host container"
 
 .PHONY: env
 env:
@@ -197,9 +197,9 @@ aaa.logs:
 radius.logs:
 	docker service logs --raw -f oftee_radius
 
-.PHONY: onos.logs
-onos.logs:
-	docker service logs --raw -f oftee_onos
+.PHONY: controller.logs
+controller.logs:
+	docker service logs --raw -f oftee_controller
 
 .PHONY: odl.logs
 odl.logs:

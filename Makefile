@@ -163,7 +163,7 @@ wpa:
 
 .PHONY: dhcp
 dhcp:
-	docker exec -ti $(shell ./utils/cid oftee_host) dhclient -4 -v -d -1 eth2
+	docker exec -ti $(shell ./utils/cid oftee_host) dhclient -4 -v -d -1 eth2 $(DHCP_OPTS) 
 
 .PHONY: host.shell
 host.shell:

@@ -13,7 +13,10 @@ endif
 endif
 
 ifeq ($(CONTROLLER),onos)
-CONTROLLER_IMAGE=onosproject/onos:1.13.1
+ifeq ($(ONOS_VERSION),)
+ONOS_VERSION=1.13.3
+endif
+CONTROLLER_IMAGE=onosproject/onos:$(ONOS_VERSION)
 endif
 ifeq ($(CONTROLLER),odl)
 ODL_FEATURES=odl-l2switch-switch-rest odl-dlux-core
@@ -91,7 +94,7 @@ relay.image:
 pull.images:
 	docker pull freeradius/freeradius-server:latest
 	docker pull networkboot/dhcpd:latest
-	docker pull onosproject/onos:1.13.1
+	docker pull onosproject/onos:$(ONOS_VERSION)
 	docker pull glefevre/opendaylight:latest
 
 .PHONY: images
@@ -121,8 +124,8 @@ endif
 .PHONY: flows
 flows:
 ifeq ($(CONTROLLER),onos)
-	curl -sSL -H 'Content-type: application/json' http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}')  -d@example/onos_aaa_in.json
-	curl -sSL -H 'Content-type: application/json' http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}')  -d@example/onos_dhcp_in.json
+	curl --fail -sSL -H 'Content-type: application/json' http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}')  -d@example/onos_aaa_in.json
+	curl --fail -sSL -H 'Content-type: application/json' http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}')  -d@example/onos_dhcp_in.json
 else
 	curl --fail -sSL -XPUT -H 'Content-type: application/xml' http://admin:admin@localhost:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:$(shell printf "%d" 0x$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}'))/table/0/flow/263 -d@example/odl_aaa_in.xml
 	curl --fail -sSL -XPUT -H 'Content-type: application/xml' http://admin:admin@localhost:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:$(shell printf "%d" 0x$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}'))/table/0/flow/264 -d@example/odl_dhcp_in.xml
@@ -131,7 +134,7 @@ endif
 .PHONY: flow-aaa-wait
 flow-aaa-wait:
 ifeq ($(CONTROLLER),onos)
-	@./utils/wait-for-success.sh "waiting for ONOS to accept flow requests ..." curl --fail -sSL -H Content-type:application/json http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 2>/dev/null | grep dpid | awk -F: '{print $$NF}')  -d@example/onos_aaa_in.json
+	@./utils/wait-for-success.sh -check "waiting for ONOS to accept flow requests ..." curl --fail -si -H Content-type:application/json http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 2>/dev/null | grep dpid | awk -F: '{print $$NF}')  -d@example/onos_aaa_in.json
 else
 	@./utils/wait-for-success.sh "waiting for ODL to accept flow requests ..." curl --fail -sSL -XPUT -H Content-type:application/xml http://admin:admin@localhost:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:$(shell printf "%d" 0x$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}'))/table/0/flow/263 -d@example/odl_aaa_in.xml
 endif
@@ -139,7 +142,7 @@ endif
 .PHONY: flow-dhcp-wait
 flow-dhcp-wait:
 ifeq ($(CONTROLLER),onos)
-	@./utils/wait-for-success.sh "waiting for ONOS to accept flow requests ..." curl --fail -sSL -H Content-type:application/json http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 2>/dev/null | grep dpid | awk -F: '{print $$NF}')  -d@example/onos_dhcp_in.json
+	@./utils/wait-for-success.sh -check "waiting for ONOS to accept flow requests ..." curl --fail -si -H Content-type:application/json http://karaf:karaf@127.0.0.1:8181/onos/v1/flows/of:$(shell sudo ovs-ofctl show br0 2>/dev/null | grep dpid | awk -F: '{print $$NF}')  -d@example/onos_dhcp_in.json
 else
 	@./utils/wait-for-success.sh "waiting for ODL to accept flow requests ..." curl --fail -sSL -XPUT -H Content-type:application/xml http://admin:admin@localhost:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:$(shell printf "%d" 0x$(shell sudo ovs-ofctl show br0 | grep dpid | awk -F: '{print $$NF}'))/table/0/flow/264 -d@example/odl_dhcp_in.xml
 endif

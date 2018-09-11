@@ -67,7 +67,7 @@ Vagrant.configure("2") do |config|
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
     apt-get update
-    apt-get install -y curl git mercurial make binutils bison gcc build-essential openvswitch-switch sshpass
+    apt-get install -y curl git mercurial make binutils bison gcc build-essential openvswitch-switch sshpass jq
 
     # Install Docker
     curl -s -S -L -o /tmp/docker-install http://get.docker.io
